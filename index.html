@@ -227,6 +227,105 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
+        <a href="/2024/12/28/attention_map%E5%8F%AF%E8%A7%86%E5%8C%96/" target="_self">
+          map可视化
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/28/attention_map%E5%8F%AF%E8%A7%86%E5%8C%96/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-28 06:25" pubdate>
+              2024-12-28
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/12/28/ddpm%E8%A7%A3%E8%AF%BB/" target="_self">
+          ddpm解读
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/28/ddpm%E8%A7%A3%E8%AF%BB/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-28 06:25" pubdate>
+              2024-12-28
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2024/12/28/flow_matching%E6%8A%80%E6%9C%AF%E8%A7%A3%E8%AF%BB/" target="_self">
+          matching技术解读
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2024/12/28/flow_matching%E6%8A%80%E6%9C%AF%E8%A7%A3%E8%AF%BB/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2024-12-28 06:24" pubdate>
+              2024-12-28
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
         <a href="/2024/12/28/flux%E4%BB%A3%E7%A0%81%E9%98%85%E8%AF%BB/" target="_self">
           flux代码阅读
         </a>
@@ -261,14 +360,14 @@
       <h2 class="index-header">
         
         <a href="/2024/12/28/%E5%BC%A0%E9%87%8F%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E5%AD%98%E5%82%A8/" target="_self">
-          张量在内存中的存储
+          张量在内存中的存储(reshape等操作理解)
         </a>
       </h2>
 
       
       <a class="index-excerpt index-excerpt__noimg" href="/2024/12/28/%E5%BC%A0%E9%87%8F%E5%9C%A8%E5%86%85%E5%AD%98%E4%B8%AD%E7%9A%84%E5%AD%98%E5%82%A8/" target="_self">
         <div>
-          在底层实现中，PyTorch 中的张量（Tensor）实际上是以一维的连续内存块存储的，只是通过不同的 stride 来控制数据在内存中的访问顺序。我习惯从右往左去看待张量，因此我说的层的顺序是从右往左的 12345678910Example.1：Tensor A.shape: (2, 3, 4)视图：[[[0, 1, 2, 3],   // 第一个 batch, 第 1 行 [4, 5, 6,
+          在阅读flux代码的时候，看到这段处理latent的代码有些懵逼，追根溯源就是自己对于pytorch Tensor数据组织的方式理解不透彻，因此写下这篇博客开云破雾： 1234567@staticmethoddef _pack_latents(latents, batch_size, num_channels_latents, height, width):    latents = latent
         </div>
       </a>
 
