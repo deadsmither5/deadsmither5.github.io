@@ -40,7 +40,7 @@
 <meta property="og:image" content="https://deadsmither5.github.io/2025/01/03/StageDesigner/The%20Godfather.png">
 <meta property="og:image" content="https://deadsmither5.github.io/2025/01/03/StageDesigner/The%20Diary%20of%20Anne%20Frank.png">
 <meta property="article:published_time" content="2025-01-02T19:39:36.000Z">
-<meta property="article:modified_time" content="2025-03-09T08:32:45.094Z">
+<meta property="article:modified_time" content="2025-03-09T08:46:21.373Z">
 <meta property="article:author" content="zhaoxing">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://deadsmither5.github.io/2025/01/03/StageDesigner/paper.png">
@@ -343,11 +343,13 @@ Sichen Guo³, Huanling Hu¹, Guangnan Ye¹†, Zuo Hu³</b>
         <img src="/2025/01/03/StageDesigner/hug.png" srcset="/img/loading.gif" lazyload alt="Dataset Icon"> Dataset
     </a>
 </div>
-<div style="text-align: center; margin: 40px 0;">
-    <video width="800" height="450" autoplay muted controls>
-        <source src="demo.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+<div style="max-width: 800px; margin: 40px auto; position: relative;">
+    <div style="padding-bottom: 56.25%;"> <!-- 16:9 宽高比 -->
+        <video style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" autoplay muted controls>
+            <source src="demo.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
 </div>
 <h2 id="abstract"><a class="markdownIt-Anchor" href="#abstract"></a> Abstract</h2>
 <p>In this work, we introduce <strong>StageDesigner</strong>, the first comprehensive framework for artistic stage generation using large language models (LLMs) combined with layout-controlled diffusion models. Given the professional requirements of stage scenography, StageDesigner simulates the workflows of seasoned artists to generate immersive 3D stage scenes. Specifically, our approach is divided into three primary modules: <em>Script Analysis</em>, which extracts thematic and spatial cues from input scripts; <em>Foreground Generation</em>, which constructs and arranges essential 3D objects; and <em>Background Generation</em>, which produces a harmonious background aligned with the narrative atmosphere and maintains spatial coherence by managing occlusions between foreground and background elements. Furthermore, we introduce the <strong>StagePro-V1</strong> dataset, a dedicated dataset with 276 unique stage scenes spanning different historical styles and annotated with scripts, images, and detailed 3D layouts, specifically tailored for this task. Finally, evaluations using both standard and newly proposed metrics, along with extensive user studies, demonstrate the effectiveness of StageDesigner, showcasing its ability to produce visually and thematically cohesive stages that meet both artistic and spatial coherence standards.</p>
