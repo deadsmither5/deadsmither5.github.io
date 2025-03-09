@@ -1,0 +1,840 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="../../../../img/avatar.jpg">
+  <link rel="icon" href="../../../../img/avatar.jpg">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="zhaoxing">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="CLIP（Contrastive Language-Image Pretraining）使用了**对比学习（Contrastive Learning）**的方式来训练图像和文本的匹配关系，其核心思想是让正确的图像-文本对在特征空间中靠近，而错误的对则远离。本文将详细解析 CLIP 的损失函数的原理、推导，并提供 PyTorch 代码实现。   1. CLIP 的损失函数原理 CLIP 的损失函数基">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clip Loss">
+<meta property="og:url" content="https://deadsmither5.github.io/2025/03/09/Loss/index.html">
+<meta property="og:site_name" content="照星的学习空间">
+<meta property="og:description" content="CLIP（Contrastive Language-Image Pretraining）使用了**对比学习（Contrastive Learning）**的方式来训练图像和文本的匹配关系，其核心思想是让正确的图像-文本对在特征空间中靠近，而错误的对则远离。本文将详细解析 CLIP 的损失函数的原理、推导，并提供 PyTorch 代码实现。   1. CLIP 的损失函数原理 CLIP 的损失函数基">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-03-09T13:59:30.000Z">
+<meta property="article:modified_time" content="2025-03-09T14:23:43.550Z">
+<meta property="article:author" content="zhaoxing">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Clip Loss - 照星的学习空间</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="../../../../css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="../../../../css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="../../../../css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"deadsmither5.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="../../../../js/utils.js" ></script>
+  <script  src="../../../../js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="../../../../index.html">
+      <strong>Zhaoxing Gan</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="../../../../index.html" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="../../../../archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="../../../../categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="../../../../tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="../../../../about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('../../../../img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Clip Loss"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-03-09 21:59" pubdate>
+          2025年3月9日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Clip Loss</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>CLIP（Contrastive Language-Image Pretraining）使用了**对比学习（Contrastive Learning）**的方式来训练图像和文本的匹配关系，其核心思想是让正确的图像-文本对在特征空间中靠近，而错误的对则远离。本文将详细解析 CLIP 的损失函数的原理、推导，并提供 PyTorch 代码实现。</p>
+<hr>
+<h2 id="1-clip-的损失函数原理"><a class="markdownIt-Anchor" href="#1-clip-的损失函数原理"></a> <strong>1. CLIP 的损失函数原理</strong></h2>
+<p>CLIP 的损失函数基于 <strong>InfoNCE（信息噪声对比估计）</strong>，也可以看作是 <strong>对比损失（Contrastive Loss）</strong>。其核心思想如下：</p>
+<ul>
+<li>给定一个批次的 <strong>N 组（image, text）对</strong>，即 ( {(I_1, T_1), (I_2, T_2), …, (I_N, T_N)} )</li>
+<li>通过 <strong>图像编码器</strong>（Vision Transformer 或 ResNet）将图像 ( I_i ) 映射到特征向量 ( v_i )</li>
+<li>通过 <strong>文本编码器</strong>（Transformer）将文本 ( T_i ) 映射到特征向量 ( t_i )</li>
+<li>通过<strong>归一化</strong>将这些向量映射到单位球面</li>
+<li>计算所有 <strong>图像-文本对的相似度矩阵</strong></li>
+<li>使用 <strong>对比损失（Contrastive Loss）</strong> 使得正确的 (image, text) 对的相似度最大化，错误的最小化</li>
+</ul>
+<h3 id="11-计算相似度"><a class="markdownIt-Anchor" href="#11-计算相似度"></a> <strong>1.1 计算相似度</strong></h3>
+<p>设 ( v_i ) 是图像的嵌入（embedding），( t_j ) 是文本的嵌入。CLIP 计算 <strong>图像-文本对之间的相似度</strong> ：</p>
+<p>[<br>
+s_{i, j} = \frac{v_i \cdot t_j}{|v_i| |t_j|}<br>
+]</p>
+<p>即<strong>归一化的余弦相似度</strong>，表示图像 ( i ) 和文本 ( j ) 之间的匹配程度。</p>
+<h3 id="12-计算损失函数"><a class="markdownIt-Anchor" href="#12-计算损失函数"></a> <strong>1.2 计算损失函数</strong></h3>
+<p>CLIP 采用<strong>双向对比损失</strong>，即：</p>
+<ol>
+<li><strong>图像作为查询（image-to-text）</strong>：希望每张图像 ( I_i ) 在所有文本 ( T_j ) 中，只与它的匹配文本 ( T_i ) 有最高的相似度。</li>
+<li><strong>文本作为查询（text-to-image）</strong>：希望每个文本 ( T_i ) 在所有图像 ( I_j ) 中，只与它的匹配图像 ( I_i ) 有最高的相似度。</li>
+</ol>
+<p>采用 <strong>交叉熵损失（Cross-Entropy Loss）</strong>，分别对行和列计算损失：</p>
+<h4 id="1-image-to-textit损失"><a class="markdownIt-Anchor" href="#1-image-to-textit损失"></a> <strong>(1) Image-to-Text（I→T）损失</strong></h4>
+<p>对于每个图像 ( I_i )，正确的文本是 ( T_i )，计算 <strong>Softmax</strong> 归一化概率：</p>
+<p>[<br>
+\mathcal{L}<em>{I \rightarrow T} = -\frac{1}{N} \sum</em>{i=1}^{N} \log \frac{\exp(s_{i, i} / \tau)}{\sum_{j=1}^{N} \exp(s_{i, j} / \tau)}<br>
+]</p>
+<p>其中：</p>
+<ul>
+<li>( \tau ) 是<strong>温度参数（temperature parameter）</strong>，用于调整分布的陡峭程度。</li>
+</ul>
+<h4 id="2-text-to-imageti损失"><a class="markdownIt-Anchor" href="#2-text-to-imageti损失"></a> <strong>(2) Text-to-Image（T→I）损失</strong></h4>
+<p>类似地，对于每个文本 ( T_j )，正确的图像是 ( I_j )：</p>
+<p>[<br>
+\mathcal{L}<em>{T \rightarrow I} = -\frac{1}{N} \sum</em>{j=1}^{N} \log \frac{\exp(s_{j, j} / \tau)}{\sum_{i=1}^{N} \exp(s_{i, j} / \tau)}<br>
+]</p>
+<h4 id="3-总损失"><a class="markdownIt-Anchor" href="#3-总损失"></a> <strong>(3) 总损失</strong></h4>
+<p>最终损失是两个方向的平均：</p>
+<p>[<br>
+\mathcal{L} = \frac{1}{2} (\mathcal{L}<em>{I \rightarrow T} + \mathcal{L}</em>{T \rightarrow I})<br>
+]</p>
+<hr>
+<h2 id="2-pytorch-代码实现-clip-损失函数"><a class="markdownIt-Anchor" href="#2-pytorch-代码实现-clip-损失函数"></a> <strong>2. PyTorch 代码实现 CLIP 损失函数</strong></h2>
+<p>下面是 CLIP 的 <strong>对比损失（Contrastive Loss）</strong> 在 PyTorch 中的实现。</p>
+<h3 id="21-clip-主要步骤"><a class="markdownIt-Anchor" href="#21-clip-主要步骤"></a> <strong>2.1 CLIP 主要步骤</strong></h3>
+<ul>
+<li><strong>编码图像和文本</strong>（使用 Transformer 和 ViT）</li>
+<li><strong>归一化特征</strong></li>
+<li><strong>计算余弦相似度</strong></li>
+<li><strong>计算 InfoNCE 损失（交叉熵）</strong></li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">CLIPLoss</span>(torch.nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, temperature=<span class="hljs-number">0.07</span></span>):<br>        <span class="hljs-built_in">super</span>(CLIPLoss, <span class="hljs-variable language_">self</span>).__init__()<br>        <span class="hljs-variable language_">self</span>.temperature = temperature<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, image_features, text_features</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        计算 CLIP 的对比损失</span><br><span class="hljs-string">        </span><br><span class="hljs-string">        参数：</span><br><span class="hljs-string">        - image_features: 形状为 (N, D) 的图像特征</span><br><span class="hljs-string">        - text_features: 形状为 (N, D) 的文本特征</span><br><span class="hljs-string"></span><br><span class="hljs-string">        返回：</span><br><span class="hljs-string">        - CLIP 损失</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br><br>        <span class="hljs-comment"># 归一化特征（L2 归一化到单位球面）</span><br>        image_features = F.normalize(image_features, p=<span class="hljs-number">2</span>, dim=-<span class="hljs-number">1</span>)  <span class="hljs-comment"># (N, D)</span><br>        text_features = F.normalize(text_features, p=<span class="hljs-number">2</span>, dim=-<span class="hljs-number">1</span>)  <span class="hljs-comment"># (N, D)</span><br><br>        <span class="hljs-comment"># 计算相似度矩阵（余弦相似度）</span><br>        logits = (image_features @ text_features.T) / <span class="hljs-variable language_">self</span>.temperature  <span class="hljs-comment"># (N, N)</span><br><br>        <span class="hljs-comment"># 目标标签：对角线上的才是匹配的</span><br>        labels = torch.arange(logits.shape[<span class="hljs-number">0</span>]).to(logits.device)  <span class="hljs-comment"># (N,)</span><br><br>        <span class="hljs-comment"># 计算交叉熵损失（分别计算 I-&gt;T 和 T-&gt;I）</span><br>        loss_i2t = F.cross_entropy(logits, labels)  <span class="hljs-comment"># 图像-&gt;文本</span><br>        loss_t2i = F.cross_entropy(logits.T, labels)  <span class="hljs-comment"># 文本-&gt;图像</span><br><br>        <span class="hljs-comment"># 取平均</span><br>        loss = (loss_i2t + loss_t2i) / <span class="hljs-number">2</span><br><br>        <span class="hljs-keyword">return</span> loss<br></code></pre></td></tr></table></figure>
+<hr>
+<h2 id="3-代码解析"><a class="markdownIt-Anchor" href="#3-代码解析"></a> <strong>3. 代码解析</strong></h2>
+<h3 id="31-归一化"><a class="markdownIt-Anchor" href="#31-归一化"></a> <strong>3.1 归一化</strong></h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">image_features = F.normalize(image_features, p=<span class="hljs-number">2</span>, dim=-<span class="hljs-number">1</span>)<br>text_features = F.normalize(text_features, p=<span class="hljs-number">2</span>, dim=-<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<p>将图像和文本特征归一化到单位球面，确保计算的相似度是<strong>余弦相似度</strong>。</p>
+<h3 id="32-计算相似度"><a class="markdownIt-Anchor" href="#32-计算相似度"></a> <strong>3.2 计算相似度</strong></h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">logits = (image_features @ text_features.T) / <span class="hljs-variable language_">self</span>.temperature<br></code></pre></td></tr></table></figure>
+<p>使用<strong>矩阵乘法</strong>计算图像-文本相似度，除以温度参数 ( \tau )。</p>
+<h3 id="33-计算损失"><a class="markdownIt-Anchor" href="#33-计算损失"></a> <strong>3.3 计算损失</strong></h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs python">labels = torch.arange(logits.shape[<span class="hljs-number">0</span>]).to(logits.device)<br>loss_i2t = F.cross_entropy(logits, labels)<br>loss_t2i = F.cross_entropy(logits.T, labels)<br>loss = (loss_i2t + loss_t2i) / <span class="hljs-number">2</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>labels = torch.arange(N)</code>: 真实匹配的文本索引</li>
+<li><code>cross_entropy(logits, labels)</code>: 计算交叉熵损失</li>
+<li>计算 <strong>image-to-text</strong> 和 <strong>text-to-image</strong>，并取均值。</li>
+</ul>
+<hr>
+<h2 id="4-结论"><a class="markdownIt-Anchor" href="#4-结论"></a> <strong>4. 结论</strong></h2>
+<p>CLIP 的损失函数是<strong>对比损失</strong>的一种实现方式，利用<strong>对称交叉熵损失</strong>来对图像和文本进行匹配训练。PyTorch 代码实现主要包括：</p>
+<ol>
+<li>计算特征的<strong>归一化</strong></li>
+<li>计算<strong>相似度矩阵</strong></li>
+<li>计算<strong>双向交叉熵损失</strong></li>
+<li><strong>取均值</strong>得到最终损失</li>
+</ol>
+<p><strong>logits 矩阵 ( S )</strong> 是一个<strong>方阵</strong>，其形状为 ( (N, N) )，对角线元素 ( S_{i,i} ) 代表匹配的图像-文本对的相似度。既然 ( S ) 是方阵，那么它的转置 ( S^T ) 也是方阵，对角线元素不变。那么，为什么 CLIP 还要分成 <strong>两个损失</strong>（image-to-text 和 text-to-image）呢？</p>
+<hr>
+<h2 id="1-为什么要分-image-to-text-和-text-to-image-损失"><a class="markdownIt-Anchor" href="#1-为什么要分-image-to-text-和-text-to-image-损失"></a> <strong>1. 为什么要分 Image-to-Text 和 Text-to-Image 损失？</strong></h2>
+<p>尽管 logits 矩阵是方阵，但它的行和列的含义不同：</p>
+<ul>
+<li>
+<p><strong>行视角（image-to-text, I→T）：</strong><br>
+每一行 ( i ) 代表<strong>图像 ( I_i ) 与所有文本 ( T_j ) 的相似度</strong>。我们希望<strong>图像 ( I_i ) 和正确的文本 ( T_i ) 的相似度最大</strong>，其他文本的相似度最小。</p>
+<p>损失公式：<br>
+[<br>
+\mathcal{L}<em>{I \rightarrow T} = -\frac{1}{N} \sum</em>{i=1}^{N} \log \frac{\exp(S_{i, i} / \tau)}{\sum_{j=1}^{N} \exp(S_{i, j} / \tau)}<br>
+]<br>
+这里，我们在每一行做 softmax，把<strong>每张图像看成 query，所有文本作为候选</strong>。</p>
+</li>
+<li>
+<p><strong>列视角（text-to-image, T→I）：</strong><br>
+每一列 ( j ) 代表<strong>文本 ( T_j ) 与所有图像 ( I_i ) 的相似度</strong>。我们希望<strong>文本 ( T_j ) 和正确的图像 ( I_j ) 的相似度最大</strong>，其他图像的相似度最小。</p>
+<p>损失公式：<br>
+[<br>
+\mathcal{L}<em>{T \rightarrow I} = -\frac{1}{N} \sum</em>{j=1}^{N} \log \frac{\exp(S_{j, j} / \tau)}{\sum_{i=1}^{N} \exp(S_{i, j} / \tau)}<br>
+]<br>
+这里，我们在每一列做 softmax，把<strong>每个文本看成 query，所有图像作为候选</strong>。</p>
+</li>
+</ul>
+<h3 id="核心区别softmax-计算方式不同"><a class="markdownIt-Anchor" href="#核心区别softmax-计算方式不同"></a> <strong>核心区别：Softmax 计算方式不同</strong></h3>
+<ul>
+<li><strong>( \mathcal{L}_{I \rightarrow T} )</strong> 计算的是<strong>每行的 softmax</strong>（图像为 query）</li>
+<li><strong>( \mathcal{L}_{T \rightarrow I} )</strong> 计算的是<strong>每列的 softmax</strong>（文本为 query）</li>
+<li><strong>尽管对角线元素数值相同，但 softmax 归一化时，分母不同</strong>，导致两个方向的 loss 并不等价。</li>
+</ul>
+<hr>
+<h2 id="2-直观理解"><a class="markdownIt-Anchor" href="#2-直观理解"></a> <strong>2. 直观理解</strong></h2>
+<p>假设有 3 组 (image, text) 对：<br>
+[<br>
+S =<br>
+\begin{bmatrix}<br>
+s_{1,1} &amp; s_{1,2} &amp; s_{1,3} \<br>
+s_{2,1} &amp; s_{2,2} &amp; s_{2,3} \<br>
+s_{3,1} &amp; s_{3,2} &amp; s_{3,3}<br>
+\end{bmatrix}<br>
+]</p>
+<ul>
+<li>
+<p><strong>行视角（I→T）：</strong></p>
+<ul>
+<li>以 <strong>第一行</strong>为例，我们计算 <strong>图像 ( I_1 ) 与所有文本 ( T_j ) 的 softmax</strong>：<br>
+[<br>
+P(T_1 | I_1) = \frac{\exp(s_{1,1} / \tau)}{\exp(s_{1,1} / \tau) + \exp(s_{1,2} / \tau) + \exp(s_{1,3} / \tau)}<br>
+]</li>
+<li>这样每一行的 softmax 归一化，使得<strong>图像 embedding 学到的是更好地匹配文本</strong>。</li>
+</ul>
+</li>
+<li>
+<p><strong>列视角（T→I）：</strong></p>
+<ul>
+<li>以 <strong>第一列</strong>为例，我们计算 <strong>文本 ( T_1 ) 与所有图像 ( I_i ) 的 softmax</strong>：<br>
+[<br>
+P(I_1 | T_1) = \frac{\exp(s_{1,1} / \tau)}{\exp(s_{1,1} / \tau) + \exp(s_{2,1} / \tau) + \exp(s_{3,1} / \tau)}<br>
+]</li>
+<li>这样每一列的 softmax 归一化，使得<strong>文本 embedding 学到的是更好地匹配图像</strong>。</li>
+</ul>
+</li>
+</ul>
+<p><strong>结论：即便 ( S ) 是对称的，行 softmax 和列 softmax 计算方式不同，导致优化目标不同，必须分别计算。</strong></p>
+<hr>
+<h2 id="3-pytorch-代码解析"><a class="markdownIt-Anchor" href="#3-pytorch-代码解析"></a> <strong>3. PyTorch 代码解析</strong></h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs python">loss_i2t = F.cross_entropy(logits, labels)  <span class="hljs-comment"># 图像-&gt;文本</span><br>loss_t2i = F.cross_entropy(logits.T, labels)  <span class="hljs-comment"># 文本-&gt;图像</span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>loss_i2t</code>: 计算<strong>行 softmax</strong>，图像作为 query</li>
+<li><code>loss_t2i</code>: 计算<strong>列 softmax</strong>，文本作为 query</li>
+<li><strong>两个方向都优化，确保图像和文本 embedding 都足够强</strong></li>
+</ul>
+<hr>
+<h2 id="4-总结"><a class="markdownIt-Anchor" href="#4-总结"></a> <strong>4. 总结</strong></h2>
+<h3 id="为什么-clip-需要分两个-loss"><a class="markdownIt-Anchor" href="#为什么-clip-需要分两个-loss"></a> <strong>为什么 CLIP 需要分两个 loss？</strong></h3>
+<ol>
+<li>
+<p><strong>logits 矩阵 ( S ) 是方阵，但 softmax 计算方式不同</strong></p>
+<ul>
+<li><strong>I→T 计算每行的 softmax</strong>（图像为 query）</li>
+<li><strong>T→I 计算每列的 softmax</strong>（文本为 query）</li>
+<li>这导致两个方向的 loss 不等价。</li>
+</ul>
+</li>
+<li>
+<p><strong>优化目标不同</strong></p>
+<ul>
+<li><code>loss_i2t</code> 让图像更容易找到正确的文本。</li>
+<li><code>loss_t2i</code> 让文本更容易找到正确的图像。</li>
+</ul>
+</li>
+<li>
+<p><strong>双向优化更鲁棒</strong></p>
+<ul>
+<li>如果只优化 I→T，那么可能文本的表示能力较差，反之亦然。</li>
+<li><strong>双向优化保证模型学习到更均衡的表征，提高检索和匹配能力。</strong></li>
+</ul>
+</li>
+</ol>
+<p><strong>因此，CLIP 采用了双向损失（image-to-text + text-to-image），确保图像和文本的嵌入在语义空间中对齐得更好。</strong></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Clip Loss</div>
+      <div>https://deadsmither5.github.io/2025/03/09/Loss/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>zhaoxing</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年3月9日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="../../../01/07/infinity/" title="infinity">
+                        <span class="hidden-mobile">infinity</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="../../../../js/events.js" ></script>
+<script  src="../../../../js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="../../../../js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="../../../../js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="../../../../js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
